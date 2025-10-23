@@ -1,0 +1,114 @@
+#安裝YOLO
+conda create -n yolo python=3.11 -y  #
+pip install --upgrade pip
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+pip install ultralytics opencv-python
+yolo help #驗證安裝有沒有成功
+
+#資料夾內容物
+datasets/your_dataset/
+ ├─ images/train
+ ├─ images/val
+ ├─labels/train
+ ├─ labels/val
+ └─ root_classes.txt裡面就是標籤(root))
+#先產生label，也就是畫圖片
+#使用labelImg來畫，還有其他軟體
+#安裝labelImg
+#先創造兩個資料夾images_all與labels_all
+conda activate yolo
+pip install labelImg
+labelImg /path/to/images_all /path/to/root_classes.txt
+#在畫的時候可能會遇到閃退的問題可以自行修改labelImg理的參數
+C:\Users\path\.conda\envs\yolo\Lib\site-packages\labelImg\labelImg.py#第965行
+bar.setValue(bar.value() + bar.singleStep() * units)
+->bar.setValue(int(bar.value() + bar.singleStep() * units))
+#第二個錯誤地方
+C:\Users\<你的帳號>\.conda\envs\yolo\Lib\site-packages\labelImg\libs\canvas.py#第526
+p.drawLine(self.prev_point.x(), 0, self.prev_point.x(), self.pixmap.height())
+p.drawLine(0, self.prev_point.y(), self.pixmap.width(), self.prev_point.y())
+p.drawRect(left_top.x(), left_top.y(), rect_width, rect_height)
+# 或任何使用 drawLine(x1, y1, x2, y2) 的地方分別改成以下
+p.drawLine(int(self.prev_point.x()), 0, int(self.prev_point.x()), int(self.pixmap.height()))
+p.drawLine(0, int(self.prev_point.y()), int(self.pixmap.width()), int(self.prev_point.y()))
+p.drawRect(int(left_top.x()), int(left_top.y()), int(rect_width), int(rect_height))
+#總之哪裡有錯改哪裡
+#labelImg操作
+#Open Dir（開啟影像資料夾）：選到你的 images_all/
+#Change Save Dir（設定標註儲存資料夾）：選到你的 labels_all/
+#切換到 YOLO 格式：按工具列的 PascalVOC ↔ YOLO 按鈕（或在上方選單找）。一定要變成 YOLO 才行。
+#View → Auto Save Mode 打勾
+#按W開始框，框完儲存並按下一張
+
+#全部畫完開始執行
+conda activate yolo
+#第一步把一整包影像（＋對應 YOLO 標註 .txt）照比例分到 images/{train,val,test} 與 labels/{train,val,test}。輸入：--images_dir：所有圖片的資料夾（可含子資料夾）--labels_dir：對應的 .txt 標註根目錄（可省略，則只分圖片）比例：--val 0.15、--test 0.10
+其他：--copy（預設）、或 --move、--seed（隨機種子）
+輸出（新的資料集根目錄）：
+<out_dir>/
+  images/train|val|test
+  labels/train|val|test
+python split_dataset.py --images_dir "C:/Users/t1240/yolo/images_all" --labels_dir "C:/Users/t1240/yolo/labels_all" --out_dir "C:/Users/t1240/yolo/roots_yolo" ` --val 0.125 --test 0.125 --copy --seed 42
+######################################################################################
+#第二步做什麼。根據你的資料集路徑與類別清單，產生 Ultralytics YOLO 需要的 data.yaml。輸入：
+--dataset_root：上一步 split_dataset.py 產生的根目錄（裡面有 images/train…）
+--names：類別名稱（順序＝類別 ID；從 0 起）
+--out：輸出路徑（預設 data.yaml）
+輸出：
+train: <dataset_root>/images/train
+val:   <dataset_root>/images/val
+names: [root]  # 或多類別
+python generate_yaml.py --dataset_root "C:/Users/t1240/yolo/roots_yolo" --names root --out "C:/Users/t1240/yolo/data.yaml"
+########################################################################################
+#第三步做什麼：
+快速檢查資料集是否有「缺標註、標註格式錯誤、座標非 0–1、類別 ID 超出範圍」等問題，並抽樣列出幾張檢視。
+輸入：
+--dataset_root：資料集根目錄
+--num_examples：列出幾張影像路徑供你手動檢視
+--num_classes：可選，用來檢查 class 是否都在 [0, num_classes-1]
+輸出：
+每個 split 的圖數/標註數
+缺標註檔的張數、格式錯行數
+抽樣圖片清單（你可打開確認）
+何時用：
+訓練前與訓練期間（若結果怪怪的）都可以跑一下，快速排錯
+python sanity_check.py --dataset_root "C:/Users/t1240/yolo/roots_yolo" --num_examples 10 --num_classes 1
+
+###########################################################################################
+###########################################################################################
+#執行訓練
+yolo train model=yolo11n.pt data="C:/Users/t1240/yolo/data.yaml" epochs=80 imgsz=800 batch=8 workers=0 patience=20 project="C:/Users/t1240/yolo/runs" name=roots_exp1
+
+#參數
+yolo train：啟動「訓練」流程（還有 val/predict/export 等子命令）。
+model=yolo11n.pt：要用的模型權重/架構。yolo11n.pt 是 YOLO11 的最小版（n = nano，速度快、顯存需求低；之後可換 yolo11s/m/l/x）。
+data="C:/Users/t1240/yolo/data.yaml"：資料設定檔路徑，裡面寫你的 train/val 影像資料夾與類別 names。
+epochs=80：最多訓練 80 輪。可搭配 patience 提早停止。
+imgsz=800：訓練時把影像縮放到 800×800。數字越大通常越準、也越吃顯存/越慢；不夠就降到 640。
+batch=8：每個梯度更新讀 8 張圖。顯存不夠可降（或留空讓它自動估）。
+workers=0：資料載入執行緒數。Windows 常建議設 0 以避免 DataLoader 問題；Linux 可設 4~8 加速。
+patience=20：早停：若連續 20 輪驗證分數沒進步，就提前停止並保留最佳權重。
+project="C:/Users/t1240/yolo/runs"：輸出根資料夾（曲線圖、權重、log 都會放這）。
+name=roots_exp1：這次實驗的子資料夾名稱；最後會在 project/name/ 看到結果（如 weights/best.pt）。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
