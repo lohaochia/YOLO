@@ -90,6 +90,8 @@ workers=0：資料載入執行緒數。Windows 常建議設 0 以避免 DataLoad
 patience=20：早停：若連續 20 輪驗證分數沒進步，就提前停止並保留最佳權重。
 project="C:/Users/t1240/yolo/runs"：輸出根資料夾（曲線圖、權重、log 都會放這）。
 name=roots_exp1：這次實驗的子資料夾名稱；最後會在 project/name/ 看到結果（如 weights/best.pt）。
+#####
+C:/Users/t1240/yolo/runs/roots_exp1/weights/best.pt#這個檔案最重要，後續繼續使用可以用她
 
 
 
