@@ -1,0 +1,1 @@
+yolo predict model="C:/Users/t1240/yolo/runs/roots_exp1/weights/best.pt" source="C:/Users/t1240/yolo/predict_in" save=True save_txt=True save_conf=True conf=0.25 iou=0.6 project="C:/Users/t1240/yolo/runs" name=roots_pred1 workers=0
