@@ -48,7 +48,7 @@ conda activate yolo
 <out_dir>/
   images/train|val|test
   labels/train|val|test
-python split_dataset.py --images_dir "C:/Users/t1240/yolo/images_all" --labels_dir "C:/Users/t1240/yolo/labels_all" --out_dir "C:/Users/t1240/yolo/roots_yolo" ` --val 0.125 --test 0.125 --copy --seed 42
+python split_dataset.py --images_dir "C:/Users/t1240/yolo/images_all" --labels_dir "C:/Users/t1240/yolo/labels_all" --out_dir "C:/Users/t1240/yolo/roots_yolo" --val 0.125 --test 0.125 --copy --seed 42
 ######################################################################################
 #第二步做什麼。根據你的資料集路徑與類別清單，產生 Ultralytics YOLO 需要的 data.yaml。輸入：
 --dataset_root：上一步 split_dataset.py 產生的根目錄（裡面有 images/train…）
