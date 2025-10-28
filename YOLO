@@ -58,7 +58,7 @@ python split_dataset.py --images_dir "C:/Users/t1240/yolo/images_all" --labels_d
 train: <dataset_root>/images/train
 val:   <dataset_root>/images/val
 names: [root]  # 或多類別
-python generate_yaml.py --dataset_root "C:/Users/t1240/yolo/roots_yolo" --names root --out "C:/Users/t1240/yolo/data.yaml"
+python generate_yaml.py --dataset_root "C:/Users/t1240/yolo/roots_yolo" --names trait --out "C:/Users/t1240/yolo/data.yaml"
 ########################################################################################
 #第三步做什麼：
 快速檢查資料集是否有「缺標註、標註格式錯誤、座標非 0–1、類別 ID 超出範圍」等問題，並抽樣列出幾張檢視。
